@@ -19,8 +19,8 @@ import time
 # ------------------------------------------------------------
 # Configuration constants
 # ------------------------------------------------------------
-INPUT_FILE = "in_WF forward simulator.txt"
-OUTPUT_FILE = "out_WF forward simulator.txt"
+INPUT_FILE = "in_WF_forward_simulator.txt"
+OUTPUT_FILE = "out_WF_forward_simulator.txt"
 MAX_GENS = 1_000_000_000  # Fixed maximum generations (1 billion)
 
 
@@ -125,4 +125,5 @@ if __name__ == "__main__":
 
     end_time = time.time()
     execution_time = end_time - start_time
+
     print(f"\nExecution time: {execution_time:.2f} seconds")
