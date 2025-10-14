@@ -1,0 +1,17 @@
+# --------------------------------------------------
+#   Population genetics simulator config file.
+#   Edit the values below to change runtime behavior.
+# --------------------------------------------------
+
+# === Parameters used by program: sim-generations.py === 
+
+# Maximum number of generations per simulation to prevent endless runs
+# - Use small values (e.g. 1000) for testing or debugging
+
+max_generations: 100000000
+
+# Number of times to repeat each parameter set run, i.e., each so-called attempt.
+# - More repetitions = better statistical averaging
+# - Set to 1 for quick test runs, or to optime parallel processing on your computer
+
+Repetitions: 20
