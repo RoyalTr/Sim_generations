@@ -14,4 +14,5 @@ max_generations: 100000000
 # - More repetitions = better statistical averaging
 # - Set to 1 for quick test runs, or to optime parallel processing on your computer
 
-Repetitions: 20
+
+Repetitions: 10
