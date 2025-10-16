@@ -7,7 +7,7 @@
 # Number of times to repeat each parameter set run, i.e., each so-called attempt.
 # - More repetitions = better statistical averaging
 # - Set to 1 for quick test runs, or to optime parallel processing on your computer
-Repetitions: 20
+Repetitions: 10
 
 # === Parameters used by program: fix_1_gene.py === 
 # Maximum number of generations per simulation to prevent endless runs
@@ -51,4 +51,5 @@ SIM_COLORS:
 # Used by program(s): create_plots_ave_simul_1_haplo.py
 # Global line width for all plot lines (float). Default is 2.0.
 # Increase for presentations or publications; decrease for dense plots.
+
 LINE_WIDTH: 3.0
