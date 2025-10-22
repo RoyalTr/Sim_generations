@@ -2,7 +2,7 @@
 """
 create_plots_AVE_simul_1_haplo.py
 AUTHOR: Dr. Royal Truman
-VERSION: 0.9
+VERSION: 0.91
 """
 import sys
 import csv
@@ -77,7 +77,7 @@ if not isinstance(CFG_SIM_COLORS, dict):
 # --- Input Files ---
 INPUT_FILE_A = Path("haplo_AVE_A_per_gen_1H.txt")
 INPUT_FILE_a = Path("haplo_AVE_a__per_gen_1H.txt")
-INPUT_FILE_SLIDE2 = Path("A_haplo_AVE_vals_per_gen_1H.txt")
+INPUT_FILE_SLIDE1 = Path("A_haplo_AVE_vals_per_gen_1H.txt")
 PARAMS_FILE = Path("in_1_haplo.txt")
 
 # --- Output Files ---
@@ -85,22 +85,22 @@ PPTX_OUTPUT = Path("AVE_per_gen_1_haplo.pptx")
 TIFF_DPI = 600
 
 # --- Slide 1 Output Files ---
-SLIDE1_FREQ_A_FILE = Path("AVE_1_haplo_freq_A_new.tiff")
-SLIDE1_N_A_FILE = Path("AVE_1_haplo_N_A_new.tiff")
-SLIDE1_FREQ_a_FILE = Path("AVE_1_haplo_freq_a_existing.tiff")
-SLIDE1_N_a_FILE = Path("AVE_1_haplo_N_a_existing.tiff")
+SLIDE1_FREQ_FILE = Path("AVE_1_haplo_freq.tiff")
+SLIDE1_HETEROZ_FILE = Path("AVE_1_haplo_heteroz.tiff")
+SLIDE1_HOMOZYG_FILE = Path("AVE_1_haplo_homozyg.tiff")
+SLIDE1_POPUL_FILE = Path("AVE_1_haplo_popul_size.tiff")
 SLIDE1_COMBO_FILE = Path("AVE_1_haplo_combo_1.tiff")
 
 # --- Slide 2 Output Files ---
-SLIDE2_FREQ_FILE = Path("AVE_1_haplo_freq.tiff")
-SLIDE2_HETEROZ_FILE = Path("AVE_1_haplo_heteroz.tiff")
-SLIDE2_HOMOZYG_FILE = Path("AVE_1_haplo_homozyg.tiff")
-SLIDE2_POPUL_FILE = Path("AVE_1_haplo_popul_size.tiff")
+SLIDE2_FREQ_A_FILE = Path("AVE_1_haplo_freq_A_new.tiff")
+SLIDE2_N_A_FILE = Path("AVE_1_haplo_N_A_new.tiff")
+SLIDE2_FREQ_a_FILE = Path("AVE_1_haplo_freq_a_existing.tiff")
+SLIDE2_N_a_FILE = Path("AVE_1_haplo_N_a_existing.tiff")
 SLIDE2_COMBO_FILE = Path("AVE_1_haplo_combo_2.tiff")
 
 # --- Slide Titles ---
-SLIDE1_TITLE_TEXT = "Average frequencies of 'A', and 'a' haplotypes, and average population size vs effective generations"
-SLIDE2_TITLE_TEXT = "Frequencies of 'A', and 'a' haplotypes, heterozygosity and homozygosity over generations"
+SLIDE1_TITLE_TEXT = "Simulation frequencies of 'A', 'a', heterozygosity and homozygosity vs effective generations\n(Based on all data)"
+SLIDE2_TITLE_TEXT = "Simulation frequencies of 'A', 'a', and 'N' vs effective generations\n(Based on only the 'A' or 'a' destined to fix)"
 
 # --- Title Slide Image ---
 TITLE_IMAGE_PATH = Path("AVE_PER_GEN_1_haplo_IMAGE.PNG")
@@ -454,80 +454,15 @@ def add_title_slide(prs: Presentation) -> None:
 
 
 # ========================
-# SLIDE 1: Average frequencies of A and a haplotypes
+# SLIDE 1: Frequencies, heterozygosity and homozygosity
 # ========================
-def load_slide1_data() -> Dict[str, Dict[int, Tuple[List[float], List[float]]]]:
-    """
-    Loads data from two CSV files for slide 1.
-    Returns dict with keys: 'freq_A', 'N_A', 'freq_a', 'N_a'
-    """
-    files = {
-        'A': INPUT_FILE_A,
-        'a': INPUT_FILE_a
-    }
-
-    data_dict = {}
-    for key, filepath in files.items():
-        validate_file(filepath)
-        data, _ = load_data(filepath)
-        data_dict[key] = data
-
-    series = {}
-    series['freq_A'] = extract_series(data_dict['A'], 'EffGen', 'freq_A')
-    series['N_A'] = extract_series(data_dict['A'], 'EffGen', 'N')
-    series['freq_a'] = extract_series(data_dict['a'], 'EffGen', 'freq_a')
-    series['N_a'] = extract_series(data_dict['a'], 'EffGen', 'N')
-
-    return series
-
-
-def create_slide1_plots(series: Dict[str, Dict[int, Tuple[List[float], List[float]]]], max_gen: float) -> List[plt.Figure]:
-    all_sim_nrs = sorted(series['freq_A'].keys())
-    colors = get_sim_colors(all_sim_nrs)
-
-    figures = []
-
-    plot_specs = [
-        {'series': series['freq_A'], 'xlabel': 'Effective Generations', 'ylabel': "Freq. of 'A' (new haplotype)", 'legend_ncol': 1},
-        {'series': series['N_A'], 'xlabel': 'Effective Generations', 'ylabel': 'Population Size (N) - new haplotype', 'legend_ncol': 1},
-        {'series': series['freq_a'], 'xlabel': 'Effective Generations', 'ylabel': "Freq. of 'a' (existing haplotype)", 'legend_ncol': 1},
-        {'series': series['N_a'], 'xlabel': 'Effective Generations', 'ylabel': 'Population Size (N) - existing haplotype', 'legend_ncol': 1}
-    ]
-
-    for spec in plot_specs:
-        fig = create_single_plot(
-            series_dict=spec['series'],
-            sim_colors=colors,
-            max_gen=max_gen,
-            xlabel=spec['xlabel'],
-            ylabel=spec['ylabel'],
-            legend_ncol=spec.get('legend_ncol', 1)
-        )
-        figures.append(fig)
-
-    combo_config = [
-        {'series': series['freq_A'], 'xlabel': 'Effective Generations', 'ylabel': "Freq. of 'A'", 'legend_ncol': 2},
-        {'series': series['N_A'], 'xlabel': 'Effective Generations', 'ylabel': 'Population Size (N)', 'legend_ncol': 1},
-        {'series': series['freq_a'], 'xlabel': 'Effective Generations', 'ylabel': "Freq. of 'a'", 'legend_ncol': 2},
-        {'series': series['N_a'], 'xlabel': 'Effective Generations', 'ylabel': 'Population Size (N)', 'legend_ncol': 1}
-    ]
-
-    combo_fig = create_combo_plot(combo_config, colors, max_gen)
-    figures.append(combo_fig)
-
-    return figures
-
-
-# ========================
-# SLIDE 2: Frequencies, heterozygosity and homozygosity
-# ========================
-def load_slide2_data() -> Dict[int, List[Dict[str, Any]]]:
-    validate_file(INPUT_FILE_SLIDE2)
-    data, _ = load_data(INPUT_FILE_SLIDE2)
+def load_slide1_data() -> Dict[int, List[Dict[str, Any]]]:
+    validate_file(INPUT_FILE_SLIDE1)
+    data, _ = load_data(INPUT_FILE_SLIDE1)
     return data
 
 
-def create_slide2_plots(data: Dict[int, List[Dict[str, Any]]], max_gen: float) -> List[plt.Figure]:
+def create_slide1_plots(data: Dict[int, List[Dict[str, Any]]], max_gen: float) -> List[plt.Figure]:
     freq_A_series = extract_series(data, 'EffGen', 'freq A')
     freq_a_series = extract_series(data, 'EffGen', 'freq a')
     hetero_series = extract_series(data, 'EffGen', 'hetero')
@@ -584,6 +519,71 @@ def create_slide2_plots(data: Dict[int, List[Dict[str, Any]]], max_gen: float) -
         {'series': n_series, 'xlabel': 'Effective Generations', 'ylabel': 'Population size (N)', 'legend_ncol': 1},
         {'series': hetero_series, 'xlabel': 'Effective Generations', 'ylabel': 'Freq. heterozygous in Aa', 'legend_ncol': 1},
         {'series': homoz_series, 'xlabel': 'Effective Generations', 'ylabel': 'Freq. homozygous in Aa', 'legend_ncol': 1}
+    ]
+
+    combo_fig = create_combo_plot(combo_config, colors, max_gen)
+    figures.append(combo_fig)
+
+    return figures
+
+
+# ========================
+# SLIDE 2: Average frequencies of A and a haplotypes
+# ========================
+def load_slide2_data() -> Dict[str, Dict[int, Tuple[List[float], List[float]]]]:
+    """
+    Loads data from two CSV files for slide 2.
+    Returns dict with keys: 'freq_A', 'N_A', 'freq_a', 'N_a'
+    """
+    files = {
+        'A': INPUT_FILE_A,
+        'a': INPUT_FILE_a
+    }
+
+    data_dict = {}
+    for key, filepath in files.items():
+        validate_file(filepath)
+        data, _ = load_data(filepath)
+        data_dict[key] = data
+
+    series = {}
+    series['freq_A'] = extract_series(data_dict['A'], 'EffGen', 'freq_A')
+    series['N_A'] = extract_series(data_dict['A'], 'EffGen', 'N')
+    series['freq_a'] = extract_series(data_dict['a'], 'EffGen', 'freq_a')
+    series['N_a'] = extract_series(data_dict['a'], 'EffGen', 'N')
+
+    return series
+
+
+def create_slide2_plots(series: Dict[str, Dict[int, Tuple[List[float], List[float]]]], max_gen: float) -> List[plt.Figure]:
+    all_sim_nrs = sorted(series['freq_A'].keys())
+    colors = get_sim_colors(all_sim_nrs)
+
+    figures = []
+
+    plot_specs = [
+        {'series': series['freq_A'], 'xlabel': 'Effective Generations', 'ylabel': "Freq. of 'A' (new haplotype)", 'legend_ncol': 1},
+        {'series': series['N_A'], 'xlabel': 'Effective Generations', 'ylabel': 'Population Size (N) - new haplotype', 'legend_ncol': 1},
+        {'series': series['freq_a'], 'xlabel': 'Effective Generations', 'ylabel': "Freq. of 'a' (existing haplotype)", 'legend_ncol': 1},
+        {'series': series['N_a'], 'xlabel': 'Effective Generations', 'ylabel': 'Population Size (N) - existing haplotype', 'legend_ncol': 1}
+    ]
+
+    for spec in plot_specs:
+        fig = create_single_plot(
+            series_dict=spec['series'],
+            sim_colors=colors,
+            max_gen=max_gen,
+            xlabel=spec['xlabel'],
+            ylabel=spec['ylabel'],
+            legend_ncol=spec.get('legend_ncol', 1)
+        )
+        figures.append(fig)
+
+    combo_config = [
+        {'series': series['freq_A'], 'xlabel': 'Effective Generations', 'ylabel': "Freq. of 'A'", 'legend_ncol': 2},
+        {'series': series['N_A'], 'xlabel': 'Effective Generations', 'ylabel': 'Population Size (N)', 'legend_ncol': 1},
+        {'series': series['freq_a'], 'xlabel': 'Effective Generations', 'ylabel': "Freq. of 'a'", 'legend_ncol': 2},
+        {'series': series['N_a'], 'xlabel': 'Effective Generations', 'ylabel': 'Population Size (N)', 'legend_ncol': 1}
     ]
 
     combo_fig = create_combo_plot(combo_config, colors, max_gen)
@@ -736,7 +736,7 @@ def main() -> None:
     REQUIRED_INPUT_FILES = [
         INPUT_FILE_A,
         INPUT_FILE_a,
-        INPUT_FILE_SLIDE2,
+        INPUT_FILE_SLIDE1,
         PARAMS_FILE,
     ]
     for f in REQUIRED_INPUT_FILES:
@@ -745,59 +745,59 @@ def main() -> None:
     # ========================
     # SLIDE 1
     # ========================
-    print("📊 Processing Slide 1: Average frequencies of A and a haplotypes...")
+    print("📊 Processing Slide 1: Frequencies, heterozygosity and homozygosity...")
 
-    slide1_series = load_slide1_data()
-
-    sim_nrs = set(slide1_series['freq_A'].keys())
-    if not all(sim_nrs == set(slide1_series[k].keys()) for k in ['freq_a', 'N_A', 'N_a']):
-        raise ValueError("Mismatch in simulation numbers across slide 1 input files.")
+    slide1_data = load_slide1_data()
+    if not slide1_data:
+        raise ValueError("No data loaded from slide 1 input file.")
 
     max_gen_slide1 = get_max_generation([
-        slide1_series['freq_A'],
-        slide1_series['N_A'],
-        slide1_series['freq_a'],
-        slide1_series['N_a']
+        extract_series(slide1_data, 'EffGen', 'freq A'),
+        extract_series(slide1_data, 'EffGen', 'freq a'),
+        extract_series(slide1_data, 'EffGen', 'hetero'),
+        extract_series(slide1_data, 'EffGen', 'homoz'),
+        extract_series(slide1_data, 'EffGen', 'N')
     ])
 
-    slide1_figures = create_slide1_plots(slide1_series, max_gen_slide1)
+    slide1_figures = create_slide1_plots(slide1_data, max_gen_slide1)
     slide1_combo_fig = slide1_figures[-1]
 
     if CFG_OUTPUT_TYPE in ['images', 'both']:
         save_figures_as_tiffs(slide1_figures, [
-            SLIDE1_FREQ_A_FILE,
-            SLIDE1_N_A_FILE,
-            SLIDE1_FREQ_a_FILE,
-            SLIDE1_N_a_FILE,
+            SLIDE1_FREQ_FILE,
+            SLIDE1_HETEROZ_FILE,
+            SLIDE1_HOMOZYG_FILE,
+            SLIDE1_POPUL_FILE,
             SLIDE1_COMBO_FILE
         ])
 
     # ========================
     # SLIDE 2
     # ========================
-    print("📊 Processing Slide 2: Frequencies, heterozygosity and homozygosity...")
+    print("📊 Processing Slide 2: Average frequencies of A and a haplotypes...")
 
-    slide2_data = load_slide2_data()
-    if not slide2_data:
-        raise ValueError("No data loaded from slide 2 input file.")
+    slide2_series = load_slide2_data()
+
+    sim_nrs = set(slide2_series['freq_A'].keys())
+    if not all(sim_nrs == set(slide2_series[k].keys()) for k in ['freq_a', 'N_A', 'N_a']):
+        raise ValueError("Mismatch in simulation numbers across slide 2 input files.")
 
     max_gen_slide2 = get_max_generation([
-        extract_series(slide2_data, 'EffGen', 'freq A'),
-        extract_series(slide2_data, 'EffGen', 'freq a'),
-        extract_series(slide2_data, 'EffGen', 'hetero'),
-        extract_series(slide2_data, 'EffGen', 'homoz'),
-        extract_series(slide2_data, 'EffGen', 'N')
+        slide2_series['freq_A'],
+        slide2_series['N_A'],
+        slide2_series['freq_a'],
+        slide2_series['N_a']
     ])
 
-    slide2_figures = create_slide2_plots(slide2_data, max_gen_slide2)
+    slide2_figures = create_slide2_plots(slide2_series, max_gen_slide2)
     slide2_combo_fig = slide2_figures[-1]
 
     if CFG_OUTPUT_TYPE in ['images', 'both']:
         save_figures_as_tiffs(slide2_figures, [
-            SLIDE2_FREQ_FILE,
-            SLIDE2_HETEROZ_FILE,
-            SLIDE2_HOMOZYG_FILE,
-            SLIDE2_POPUL_FILE,
+            SLIDE2_FREQ_A_FILE,
+            SLIDE2_N_A_FILE,
+            SLIDE2_FREQ_a_FILE,
+            SLIDE2_N_a_FILE,
             SLIDE2_COMBO_FILE
         ])
 
