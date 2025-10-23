@@ -146,11 +146,11 @@ def apply_plot_style(ax, xlabel="", ylabel=""):
     if legend is None:
         handles, labels = ax.get_legend_handles_labels()
         if handles:
-            ax.legend(handles, labels, loc='best', fontsize=TICK_FONTSIZE,
+            ax.legend(handles, labels, loc='best', fontsize=8,
                       frameon=True, fancybox=False, edgecolor='black')
     else:
         for text in legend.get_texts():
-            text.set_fontsize(TICK_FONTSIZE)
+            text.set_fontsize(8)# Here the font size for all legends is set
         legend.set_frame_on(True)
         legend.set_fancybox(False)
         legend.set_edgecolor('black')
