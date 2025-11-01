@@ -2,7 +2,7 @@
 """
 create_plots_AVE_simul_2_haplos.py
 AUTHOR: Dr. Royal Truman
-VERSION: 0.9
+VERSION: 0.91
 """
 import os
 import sys
@@ -28,7 +28,6 @@ except ImportError:
 # ======================
 CONFIG_FILE = "config_2_haplos_v1.yaml"
 pptx_filename = 'AVE_per_gen_2_haplos.pptx'
-DPI = 600
 
 # Font sizes (can be made configurable later via cfg)
 LABEL_FONTSIZE = 12
@@ -61,7 +60,7 @@ TIFF_NAME_MAP = {
 # Load and validate config
 try:
     with open(CONFIG_FILE, 'r') as f:
-        raw_config = yaml.safe_load(f)
+        config = yaml.safe_load(f)
         print(f"📄 Loading configuration from '{CONFIG_FILE}'...")
 except FileNotFoundError:
     print(f"❌ Configuration file '{CONFIG_FILE}' not found in your directory.")
@@ -70,6 +69,20 @@ except FileNotFoundError:
 except Exception as e:
     print(f"❌ Error reading or parsing '{CONFIG_FILE}': {e}")
     print("Please check that the file is valid YAML (correct indentation, colons, etc.).")
+    sys.exit(1)
+
+# Find dpi to use for graphics generated
+try:
+    tiff_dpi_val = config.get('TIFF_DPI')
+    if tiff_dpi_val is None:
+        print("❌ Missing parameter 'TIFF_DPI' in config")
+        sys.exit(1)
+    TIFF_DPI = int(tiff_dpi_val)
+    if not 72 <= TIFF_DPI <= 1000:
+        raise ValueError("TIFF_DPI must be an integer between 72 and 1000")
+except (TypeError, ValueError) as e:
+    print(f"❌ Invalid TIFF_DPI: must be an integer between 72 and 1000")
+    print(f"   Value provided: {config.get('TIFF_DPI')}")
     sys.exit(1)
 
 
@@ -106,7 +119,7 @@ class ConfigManager:
 
 # Initialize config manager
 try:
-    cfg = ConfigManager(raw_config)
+    cfg = ConfigManager(config)
     OUTPUT_TYPE = cfg.get_output_type()
 except (KeyError, ValueError) as e:
     print(f"❌ Configuration error: {e}")
@@ -258,7 +271,7 @@ def add_plot_to_ppt(presentation, fig, title="", save_as_tiff=None):
 
     # Save to temp file
     temp_img = tempfile.NamedTemporaryFile(delete=False, suffix='.tiff')
-    fig.savefig(temp_img.name, dpi=DPI, format='tiff', bbox_inches='tight')
+    fig.savefig(temp_img.name, dpi=TIFF_DPI, format='tiff', bbox_inches='tight')
     plt.close(fig)
 
     # Add image to slide
@@ -269,7 +282,7 @@ def add_plot_to_ppt(presentation, fig, title="", save_as_tiff=None):
     temp_img.close()
 
     if save_as_tiff:
-        fig.savefig(save_as_tiff, dpi=DPI, bbox_inches='tight')
+        fig.savefig(save_as_tiff, dpi=TIFF_DPI, bbox_inches='tight')
         print(f"💾 Saved image: {save_as_tiff}")
 
 
@@ -294,8 +307,8 @@ def load_data(file_dict):
 
 
 def save_figure(fig, filename):
-    """Save figure to file with standard DPI and layout."""
-    fig.savefig(filename, dpi=DPI, bbox_inches='tight')
+    """Save figure to file with standard TIFF_DPI and layout."""
+    fig.savefig(filename, dpi=TIFF_DPI, bbox_inches='tight')
     plt.close(fig)
     print(f"...{filename}")
 
@@ -629,8 +642,8 @@ def main():
 
     end_time = time.time()
     execution_time = end_time - start_time
-    print(f"⏱️ Execution time: {execution_time:.2f} seconds")
     print(f"📁 Output files stored in: {os.getcwd()}")
+    print(f"⏱️ Total runtime: {execution_time:.2f} seconds")
 
 
 if __name__ == "__main__":

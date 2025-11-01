@@ -2,7 +2,7 @@
 """
 create_plots_ALL_simul_2_haplos.py
 AUTHOR: Dr. Royal Truman
-VERSION: 0.9
+VERSION: 0.91
 """
 import sys
 import pandas as pd
@@ -16,6 +16,7 @@ import time
 import os
 from datetime import datetime
 from pathlib import Path  # Minor cleanup: modern path handling
+import yaml  # If missing:  pip install pyyaml
 
 start_time = time.time()
 
@@ -39,7 +40,7 @@ DTYPE_SPEC = {
 PARAM_COLS = ['Ni', 'r', 'K', 's_A', 'h_A', 'p_A_i', 's_B', 'h_B', 'p_B_i', 'attempts']
 
 # Plotting configuration
-PLOT_DPI = 600
+
 PLOT_THEME = {
     'font_size_axis': 14,
     'font_size_tick': 12,
@@ -65,15 +66,6 @@ COLORS = {
 # Slide dimensions (16:9)
 SLIDE_WIDTH_INCHES = 13.33
 SLIDE_HEIGHT_INCHES = 7.5
-
-# === Load YAML config file ===
-try:
-    import yaml
-except ImportError:
-    yaml = None
-    print("❌ Required package 'pyyaml' not found.")
-    print("👉 Install it with: pip install pyyaml")
-    sys.exit(1)
 
 # Check if config file exists
 if not Path(CONFIG_FILE).exists():
@@ -103,6 +95,20 @@ except KeyError as e:
     sys.exit(1)
 except ValueError as e:
     print(f"❌ Invalid value in config: {e}")
+    sys.exit(1)
+
+# Find dpi to use for graphics generated
+try:
+    tiff_dpi_val = config.get('TIFF_DPI')
+    if tiff_dpi_val is None:
+        print("❌ Missing parameter 'TIFF_DPI' in config")
+        sys.exit(1)
+    TIFF_DPI = int(tiff_dpi_val)
+    if not 72 <= TIFF_DPI <= 1000:
+        raise ValueError("TIFF_DPI must be an integer between 72 and 1000")
+except (TypeError, ValueError) as e:
+    print(f"❌ Invalid TIFF_DPI: must be an integer between 72 and 1000")
+    print(f"   Value provided: {config.get('TIFF_DPI')}")
     sys.exit(1)
 
 # Load data
@@ -287,7 +293,7 @@ def plot_pan_heteroz_homoz(ax, runs_list):
 # Function to create figure with 4 subplots (for PowerPoint)
 # ========================
 def create_figure(runs_list, max_gen_A, max_gen_B):
-    fig, axes = plt.subplots(2, 2, figsize=(12, 9), dpi=PLOT_DPI)
+    fig, axes = plt.subplots(2, 2, figsize=(12, 9), dpi=TIFF_DPI)
     ax1, ax2, ax3, ax4 = axes.flat
 
     plot_population_size(ax1, runs_list)
@@ -338,7 +344,7 @@ def calculate_max_gen(group_df, runs_list, freq_col):
 def add_simulation_slide(prs, sim_nr, params, Rep_max, total_runs, runs_list, max_gen_A, max_gen_B):
     fig = create_figure(runs_list, max_gen_A, max_gen_B)
     img_stream = BytesIO()
-    fig.savefig(img_stream, format='png', dpi=PLOT_DPI, bbox_inches='tight')
+    fig.savefig(img_stream, format='png', dpi=TIFF_DPI, bbox_inches='tight')
     img_stream.seek(0)
 
     slide = prs.slides.add_slide(prs.slide_layouts[5])
@@ -391,7 +397,7 @@ def add_simulation_slide(prs, sim_nr, params, Rep_max, total_runs, runs_list, ma
 # ========================
 def save_plot_to_tiff(plot_func, runs_list, params, sim_nr, filename_base, max_gen=None, ylabel=None):
     """Save a single plot to TIFF with parameter overlay and consistent styling."""
-    fig, ax = plt.subplots(figsize=(8, 6), dpi=PLOT_DPI)
+    fig, ax = plt.subplots(figsize=(8, 6), dpi=TIFF_DPI)
 
     # Call the plotting function with or without max_gen
     if max_gen is not None:
@@ -416,7 +422,7 @@ def save_plot_to_tiff(plot_func, runs_list, params, sim_nr, filename_base, max_g
     plt.tight_layout()
 
     filename = f"{filename_base}_{sim_nr}.tiff"
-    fig.savefig(filename, format='tiff', dpi=PLOT_DPI, pil_kwargs={"compression": "tiff_lzw"})
+    fig.savefig(filename, format='tiff', dpi=TIFF_DPI, pil_kwargs={"compression": "tiff_lzw"})
     plt.close(fig)
     print(f"...{filename}")
 

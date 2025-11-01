@@ -16,6 +16,10 @@ max_generations: 100000000
 # - Set to true if you plan to generate graph
 document_results_every_generation: true
 
+# Used by program(s): create_plots_ALL_simul_2_haplo2.py, create_plots_AVE_simul_2_haplo2.py
+# Higher DPI requires more run time and memory. 600 DPI causes free-tier VMs on AWS to crash.
+TIFF_DPI: 150
+
 # === Parameters used by programs: ===
 # create_plots_all_simul_1_haplo.py, create_plots_ave_simul_1_haplo.py
 # Graphical displays can be generated in Powerpoint files or individual tiff files.
